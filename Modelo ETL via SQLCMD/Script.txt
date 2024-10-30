@@ -1,0 +1,60 @@
+
+
+
+// ETAPA 1: COLETAR DADOS NA ORIGEM: RODAR VIA POWERSHELL
+
+bcp "select 
+    data_monitoria,
+    matricula,
+    matricula_supervisor,
+    data_feedback,
+    num_monitoria,
+    perfil_monitoria,
+    campo_feedback,
+    cast(pontos_realizados as tinyint) as pontos_realizados
+-- into #temp
+from(
+	select  
+		num_monitoria,
+		data_monitoria,
+		matricula,
+		matricula_supervisor,
+		data_feedback,
+		perfil_monitoria,
+		campo_feedback,
+		pontos_realizados,
+		row_number() over (partition by num_monitoria order by data_monitoria) valida
+	from (
+		select
+			num_monitoria,
+			cast(data_monitoria as date) data_monitoria,
+			matricula,
+			matricula_supervisor,
+			cast(data_feedback as date) data_feedback,
+			perfil_monitoria,
+			pontos_realizados,
+			len(cast(comentario_feedback as varchar(1))) campo_feedback
+		from db_qualidade.dbo.vw_ccm_aec_monitoria_cyf (nolock)
+		where
+			data_monitoria between cast(getdate()-31 as date) and cast(getdate() as date)
+			and valido = 1
+			and ( perfil_monitoria like '%operaç%' or perfil_monitoria like '%monitor de qualidade%' )
+			and len(matricula) between 4 and 6 
+		) sub1
+	) sub2
+where valida = 1;" queryout "C:\Users\danilo.cabral\Desktop\teste\monitoria_data.csv" --% -w -t, -T -S primno
+
+
+// ETAPA 2: DELETE DOS DADOS NA TABELA DESTINO: RODAR VIA SQL
+
+while 1=1
+	begin
+	delete top (10000) dbo.monitoria_cyf
+	where data_monitoria >= cast(getdate()-31 as date)
+	if @@rowcount = 0 break
+end
+
+
+// ETAPA 3: INSERIR DADOS NO DESTINO: RODAR VIA POWERSHELL
+
+bcp verticalrobbyson.dbo.monitoria_cyf in "C:\Users\danilo.cabral\Desktop\teste\monitoria_data.csv" --% -w -t, -T -S primno3

@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+  DTS:refId="Package"
+  DTS:CreationDate="10/5/2024 11:18:14 AM"
+  DTS:CreationName="Microsoft.Package"
+  DTS:CreatorComputerName="CPV1_RH_06"
+  DTS:CreatorName="GRUPO_A&amp;C\danilo.cabral"
+  DTS:DTSID="{DA0AE3FF-BCB6-4592-B246-A25919E10EF3}"
+  DTS:ExecutableType="Microsoft.Package"
+  DTS:LastModifiedProductVersion="16.0.5228.0"
+  DTS:LocaleID="1046"
+  DTS:ObjectName="Package"
+  DTS:PackageType="5"
+  DTS:VersionBuild="19"
+  DTS:VersionGUID="{128B621F-B826-4B49-B625-D69A659FD0F6}">
+  <DTS:Property
+    DTS:Name="PackageFormatVersion">8</DTS:Property>
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager
+      DTS:refId="Package.ConnectionManagers[primno3]"
+      DTS:CreationName="ADO.NET:SQL"
+      DTS:DTSID="{C1B4CBDF-E71D-490B-A004-95264849F1EA}"
+      DTS:ObjectName="primno3">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=primno3;Integrated Security=SSPI;Connect Timeout=30;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Variables />
+  <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\Coletar Origem"
+      DTS:CreationName="Microsoft.ExecuteProcess"
+      DTS:Description="Tarefa Executar Processo"
+      DTS:DTSID="{26D1E5FB-C484-4D52-8D70-8BC7CC8F46C9}"
+      DTS:ExecutableType="Microsoft.ExecuteProcess"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Coletar Origem"
+      DTS:TaskContact="Execute Process Task;Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <ExecuteProcessData
+          Executable="C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\bcp.exe"
+          Arguments="&quot;select data_monitoria, matricula, matricula_supervisor, data_feedback, num_monitoria, perfil_monitoria, campo_feedback, cast(pontos_realizados as tinyint) as pontos_realizados from( select num_monitoria, data_monitoria, matricula, matricula_supervisor, data_feedback, perfil_monitoria, campo_feedback, pontos_realizados, row_number() over (partition by num_monitoria order by data_monitoria) valida from ( select num_monitoria, cast(data_monitoria as date) data_monitoria, matricula, matricula_supervisor, cast(data_feedback as date) data_feedback, perfil_monitoria, pontos_realizados, len(cast(comentario_feedback as varchar(1))) campo_feedback from db_qualidade.dbo.vw_ccm_aec_monitoria_cyf (nolock) where data_monitoria between cast(getdate()-31 as date) and cast(getdate() as date) and valido = 1 and ( perfil_monitoria like '%operaç%' or perfil_monitoria like '%monitor de qualidade%' ) and len(matricula) between 4 and 6 ) sub1 ) sub2 where valida = 1;&quot; queryout &quot;C:\Users\danilo.cabral\Desktop\_cshap\ReplicacaoCYF_DMC\monitoria_data.csv&quot; -w -t, -T -S primno"
+          WorkingDirectory="C:\Users\danilo.cabral\Desktop\_cshap\ReplicacaoCYF_DMC\" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Delete TOP 10K D31 Destino"
+      DTS:CreationName="Microsoft.DbMaintenanceTSQLExecuteTask"
+      DTS:Description="Tarefa Executar Instrução T-SQL"
+      DTS:DTSID="{59F1EAE6-7CFE-4D7F-A809-0C71F56E7207}"
+      DTS:ExecutableType="Microsoft.DbMaintenanceTSQLExecuteTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Delete TOP 10K D31 Destino"
+      DTS:TaskContact="Execute T-SQL Statement Task; Microsoft Corporation; Microsoft SQL Server v9; © 2004 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{C1B4CBDF-E71D-490B-A004-95264849F1EA}"
+          SQLTask:SqlStatementSource="while 1=1&#xA;&#x9;begin&#xA;&#x9;delete top (10000) verticalrobbyson.dbo.monitoria_cyf&#xA;&#x9;where data_monitoria &gt;= cast(getdate()-31 as date)&#xA;&#x9;if @@rowcount = 0 break&#xA;end"
+          SQLTask:ServerVersion="9"
+          SQLTask:ExtendedLogging="True"
+          SQLTask:LocalConnectionForLogging=""
+          SQLTask:TaskName=""
+          SQLTask:IgnoreDatabasesInNotOnlineState="False" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\Inserir Destino"
+      DTS:CreationName="Microsoft.ExecuteProcess"
+      DTS:Description="Tarefa Executar Processo"
+      DTS:DTSID="{364BF00C-4F5D-4370-B390-DD8219E56541}"
+      DTS:ExecutableType="Microsoft.ExecuteProcess"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="Inserir Destino"
+      DTS:TaskContact="Execute Process Task;Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <ExecuteProcessData
+          Executable="C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\bcp.exe"
+          Arguments="verticalrobbyson.dbo.monitoria_cyf in &quot;C:\Users\danilo.cabral\Desktop\_cshap\ReplicacaoCYF_DMC\monitoria_data.csv&quot; -w -t, -T -S primno3" />
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Restrição]"
+      DTS:CreationName=""
+      DTS:DTSID="{02D19959-C74F-4B61-9A4F-7ADEBF825CD6}"
+      DTS:From="Package\Delete TOP 10K D31 Destino"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Restrição"
+      DTS:To="Package\Coletar Origem" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Restrição 1]"
+      DTS:CreationName=""
+      DTS:DTSID="{9EDC7D90-8B99-42C1-9CDF-3EF2B266F1BC}"
+      DTS:From="Package\Coletar Origem"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Restrição 1"
+      DTS:To="Package\Inserir Destino" />
+  </DTS:PrecedenceConstraints>
+  <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
+<!--Esta seção CDATA contém as informações de layout do pacote. A seção inclui informações como coordenadas (x,y), largura e altura.-->
+<!--Se você editar manualmente esta seção e cometer algum erro, poderá excluí-la. -->
+<!--O pacote ainda poderá ser carregado normalmente, mas as informações de layout anteriores serão perdidas e o designer reorganizará automaticamente os elementos na superfície de design.-->
+<Objects
+  Version="8">
+  <!--Cada nó abaixo conterá propriedades que não afetam o comportamento em tempo de execução.-->
+  <Package
+    design-time-name="Package">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="8" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        <NodeLayout
+          Size="222,42"
+          Id="Package\Delete TOP 10K D31 Destino"
+          TopLeft="55,98" />
+        <NodeLayout
+          Size="154,42"
+          Id="Package\Coletar Origem"
+          TopLeft="362,95" />
+        <NodeLayout
+          Size="150,42"
+          Id="Package\Inserir Destino"
+          TopLeft="581,95" />
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Restrição]"
+          TopLeft="277,117.5">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="85,0"
+              Start="0,0"
+              End="77.5,0">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="77.5,0" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Restrição 1]"
+          TopLeft="516,116">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="65,0"
+              Start="0,0"
+              End="57.5,0">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="57.5,0" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+</Objects>]]></DTS:DesignTimeProperties>
+</DTS:Executable>
